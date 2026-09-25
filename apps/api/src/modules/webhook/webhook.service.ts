@@ -103,9 +103,10 @@ export class WebhookService {
       changedFiles: uniqueFiles,
     };
 
-    // Quickly enqueue into BullMQ
+    // Quickly enqueue into BullMQ (BullMQ v5 does not permit ':' in custom job IDs)
+    const safeJobId = `${repository.replace(/[\/:]/g, '_')}__${commitSha}__${Date.now()}`;
     const job = await this.queue.add(JOB_GENERATE_DOCS, jobPayload, {
-      jobId: `${repository}:${commitSha}`,
+      jobId: safeJobId,
       removeOnComplete: true,
     });
 

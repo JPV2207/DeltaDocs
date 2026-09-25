@@ -54,8 +54,9 @@ export class AdminService {
       manualTrigger: true,
     };
 
+    const safeJobId = `${repository.replace(/[\/:]/g, '_')}__${commitSha}__${Date.now()}`;
     const job = await this.queue.add(JOB_GENERATE_DOCS, payload, {
-      jobId: `${repository}:${commitSha}:${Date.now()}`,
+      jobId: safeJobId,
     });
 
     this.logger.log(`Admin triggered ${generationType} generation for ${repository}@${commitSha}`);
@@ -143,8 +144,9 @@ export class AdminService {
       },
     });
 
+    const safeJobId = `${doc.repository.replace(/[\/:]/g, '_')}__${doc.commitSha}__retry_${Date.now()}`;
     const job = await this.queue.add(JOB_GENERATE_DOCS, payload, {
-      jobId: `${doc.repository}:${doc.commitSha}:retry-${Date.now()}`,
+      jobId: safeJobId,
     });
 
     this.logger.log(`Retrying generation for ${doc.repository}@${doc.shortSha} (job ${job.id})`);
