@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DocumentationVersion {
+  id               String    @id @default(cuid())
+  commitSha        String
+  shortSha         String
+  commitMessage    String?
+  commitAuthor     String?
+  commitDate       DateTime?
+  branch           String    @default("main")
+  repository       String
+  generationType   String    // "full" | "incremental"
+  status           String    // "pending" | "processing" | "success" | "failed"
+  modelUsed        String?
+  changedFiles     String[]
+  content          Json?     // structured documentation matching DocumentationContentSchema
+  rawMarkdown      String?
+  errorMessage     String?
+  generationTimeMs Int?
+  tokenUsage       Json?     // prompt, completion, total
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([repository, commitSha])
+  @@index([repository, branch, status, createdAt])
+}
+
+model RepositoryConfig {
+  id            String   @id @default(cuid())
+  fullName      String   @unique // e.g. "owner/repo"
+  defaultBranch String   @default("main")
+  docTitle      String?
+  ignoredPaths  String[] @default([])
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model GenerationJob {
+  id             String    @id @default(cuid())
+  repository     String
+  commitSha      String
+  branch         String    @default("main")
+  generationType String    // "full" | "incremental"
+  status         String    // "queued" | "running" | "completed" | "failed"
+  error          String?
+  attempts       Int       @default(0)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([repository, status])
+}
