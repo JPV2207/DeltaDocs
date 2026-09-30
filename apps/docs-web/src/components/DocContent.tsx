@@ -5,6 +5,7 @@ import { DocumentationVersionDto } from '@autodocs/shared';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import {
   FileText,
+  BookOpen,
   Layers,
   Network,
   Database,
@@ -148,7 +149,55 @@ export function DocContent({ doc }: DocContentProps) {
         </div>
       </section>
 
-      {/* Section 2: Architecture */}
+      {/* Section 2: Domain Theory & Architectural Foundations */}
+      {sections.theory && (
+        <section id="theory" className="scroll-mt-24 space-y-6">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <BookOpen className="h-5 w-5 text-purple-500" />
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              {sections.theory.title || 'Domain Theory & Technical Concepts'}
+            </h2>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 leading-relaxed text-zinc-800 dark:text-zinc-200">
+            <MarkdownRenderer content={sections.theory.summary} />
+          </div>
+
+          {sections.theory.keyConcepts && sections.theory.keyConcepts.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Key Domain Concepts</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sections.theory.keyConcepts.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-2"
+                  >
+                    <span className="font-semibold text-xs px-2.5 py-1 rounded bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                      {item.concept}
+                    </span>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 pt-1 leading-relaxed">
+                      {item.explanation}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sections.theory.workflows && (
+            <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/70 space-y-2">
+              <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">
+                Operational Workflows & Lifecycle
+              </div>
+              <div className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                {sections.theory.workflows}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Section 3: Architecture */}
       <section id="architecture" className="scroll-mt-24 space-y-6">
         <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
           <Layers className="h-5 w-5 text-indigo-500" />

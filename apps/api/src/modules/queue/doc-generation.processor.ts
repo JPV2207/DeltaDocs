@@ -124,6 +124,26 @@ export class DocGenerationProcessor extends WorkerHost {
           }
         }
 
+        if (diffFiles.length === 0 && job.data.changedFiles && job.data.changedFiles.length > 0) {
+          this.logger.log(`Using changedFiles from webhook payload: ${job.data.changedFiles.join(', ')}`);
+          for (const filename of job.data.changedFiles) {
+            if (this.github.isFileIgnored(filename)) continue;
+            try {
+              const content = await this.github.getFileContent(repository, filename, commitSha);
+              diffFiles.push({
+                filename,
+                status: 'modified',
+                additions: 0,
+                deletions: 0,
+                changes: 0,
+                content,
+              });
+            } catch (err) {
+              this.logger.warn(`Could not fetch content for changed file ${filename}: ${err.message}`);
+            }
+          }
+        }
+
         // Run AST analysis on modified files that have content
         const filesWithContent = diffFiles
           .filter((f) => f.content)

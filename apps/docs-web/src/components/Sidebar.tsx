@@ -3,6 +3,7 @@
 import React from 'react';
 import {
   FileText,
+  BookOpen,
   Layers,
   Network,
   Database,
@@ -27,6 +28,7 @@ export function Sidebar({
 }: SidebarProps) {
   const navItems = [
     { name: 'Overview', href: '#overview', icon: FileText },
+    { name: 'Domain Theory', href: '#theory', icon: BookOpen },
     { name: 'Architecture', href: '#architecture', icon: Layers },
     { name: 'API Reference', href: '#api', icon: Network },
     { name: 'Database Models', href: '#database', icon: Database },
