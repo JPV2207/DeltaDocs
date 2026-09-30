@@ -10,20 +10,23 @@ interface MarkdownRendererProps {
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+  if (!content) return null;
+
   return (
     <div className="prose dark:prose-invert max-w-none prose-zinc prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h2:border-b prose-h2:border-zinc-200 dark:prose-h2:border-zinc-800 prose-h2:pb-2 prose-h3:text-lg prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, inline, className, children, ...props }: any) {
+          code({ className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             const codeString = String(children).replace(/\n$/, '');
+            const isBlock = Boolean(match) || codeString.includes('\n');
 
-            if (!inline) {
+            if (isBlock) {
               return <CodeBlock code={codeString} language={match ? match[1] : ''} />;
             }
             return (
-              <code className="bg-zinc-100 dark:bg-zinc-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+              <code className="bg-zinc-100 dark:bg-zinc-800 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
                 {children}
               </code>
             );

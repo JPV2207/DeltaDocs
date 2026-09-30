@@ -58,6 +58,20 @@ export const BreakingChangeSchema = z.object({
   remediation: z.string().optional(),
 });
 
+export const DeveloperGuideSchema = z.object({
+  summary: z.string(),
+  gettingStarted: z.string(),
+  usageExample: z.string().optional(),
+  keyFiles: z.array(z.string()).default([]),
+});
+
+export const PatchDetailsSchema = z.object({
+  issueDescription: z.string(),
+  rootCause: z.string(),
+  fixResolution: z.string(),
+  regressionNotes: z.string().optional(),
+});
+
 export const DocumentationContentSchema = z.preprocess((val: any) => {
   if (!val || typeof val !== 'object') {
     return {
@@ -65,6 +79,7 @@ export const DocumentationContentSchema = z.preprocess((val: any) => {
       lastUpdated: new Date().toISOString(),
       changelog: 'Initial version',
       sections: {
+        changeType: 'general',
         overview: 'Overview not provided.',
         architecture: { summary: 'Architecture details not provided.', components: [] },
         api: { summary: 'API details not provided.', endpoints: [] },
@@ -77,6 +92,44 @@ export const DocumentationContentSchema = z.preprocess((val: any) => {
   }
 
   const rawSec = typeof val.sections === 'object' && val.sections !== null ? val.sections : {};
+
+  // 0. Change Type normalization
+  const validTypes = ['feature', 'fix', 'refactor', 'perf', 'docs', 'chore', 'general'];
+  let changeType: 'feature' | 'fix' | 'refactor' | 'perf' | 'docs' | 'chore' | 'general' = 'general';
+  if (typeof rawSec.changeType === 'string' && validTypes.includes(rawSec.changeType.toLowerCase())) {
+    changeType = rawSec.changeType.toLowerCase() as any;
+  } else if (typeof val.changelog === 'string') {
+    const lower = val.changelog.toLowerCase();
+    if (lower.startsWith('feat') || lower.includes('add') || lower.includes('new feature')) {
+      changeType = 'feature';
+    } else if (lower.startsWith('fix') || lower.includes('bug') || lower.includes('patch') || lower.includes('resolve')) {
+      changeType = 'fix';
+    } else if (lower.startsWith('refactor')) {
+      changeType = 'refactor';
+    }
+  }
+
+  // Developer Guide normalization (for features)
+  let developerGuide = undefined;
+  if (rawSec.developerGuide && typeof rawSec.developerGuide === 'object') {
+    developerGuide = {
+      summary: normalizeString(rawSec.developerGuide.summary, 'Feature summary not provided.'),
+      gettingStarted: normalizeString(rawSec.developerGuide.gettingStarted, 'Follow the code examples and service methods to use this capability.'),
+      usageExample: rawSec.developerGuide.usageExample ? normalizeString(rawSec.developerGuide.usageExample) : undefined,
+      keyFiles: Array.isArray(rawSec.developerGuide.keyFiles) ? rawSec.developerGuide.keyFiles.map(String) : [],
+    };
+  }
+
+  // Patch Details normalization (for bug fixes)
+  let patchDetails = undefined;
+  if (rawSec.patchDetails && typeof rawSec.patchDetails === 'object') {
+    patchDetails = {
+      issueDescription: normalizeString(rawSec.patchDetails.issueDescription, 'Defect remediated.'),
+      rootCause: normalizeString(rawSec.patchDetails.rootCause, 'Root cause identified in commit patch.'),
+      fixResolution: normalizeString(rawSec.patchDetails.fixResolution, 'Resolution applied to codebase.'),
+      regressionNotes: rawSec.patchDetails.regressionNotes ? normalizeString(rawSec.patchDetails.regressionNotes) : undefined,
+    };
+  }
 
   // 1. Theory normalization
   let theory: any = undefined;
@@ -205,6 +258,9 @@ export const DocumentationContentSchema = z.preprocess((val: any) => {
     lastUpdated: typeof val.lastUpdated === 'string' ? val.lastUpdated : new Date().toISOString(),
     changelog: normalizeString(val.changelog, 'Documentation updated.'),
     sections: {
+      changeType,
+      developerGuide,
+      patchDetails,
       overview: normalizeString(rawSec.overview, 'Overview details.'),
       theory,
       architecture,
@@ -220,6 +276,9 @@ export const DocumentationContentSchema = z.preprocess((val: any) => {
   lastUpdated: z.string(),
   changelog: z.string(),
   sections: z.object({
+    changeType: z.enum(['feature', 'fix', 'refactor', 'perf', 'docs', 'chore', 'general']).default('general'),
+    developerGuide: DeveloperGuideSchema.optional(),
+    patchDetails: PatchDetailsSchema.optional(),
     overview: z.string(),
     theory: z.object({
       title: z.string().default('Domain Theory & Architectural Concepts'),
@@ -254,4 +313,6 @@ export type ApiEndpoint = z.infer<typeof ApiEndpointSchema>;
 export type ArchitectureComponent = z.infer<typeof ArchitectureComponentSchema>;
 export type DatabaseModel = z.infer<typeof DatabaseModelSchema>;
 export type BreakingChange = z.infer<typeof BreakingChangeSchema>;
+export type DeveloperGuide = z.infer<typeof DeveloperGuideSchema>;
+export type PatchDetails = z.infer<typeof PatchDetailsSchema>;
 export type DocumentationTheory = NonNullable<DocumentationContent['sections']['theory']>;
